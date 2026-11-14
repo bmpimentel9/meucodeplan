@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>meucodeplan — GLM-5.3 via GLM Coding Plan</title>
+<meta name="description" content="Referência do GLM-5.3 e do GLM Coding Plan da Z.ai: benchmarks, comparação com modelos de fronteira, operação agêntica e o setup no Hermes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --surface:#11141a; --surface2:#161a22; --line:#232833;
+  --ink:#e8ebf0; --muted:#9aa3b2; --dim:#6b7484;
+  --accent:#7cffb2; --accent-ink:#0b0d10; --warn:#ffb77c;
+  --sans:'Space Grotesk',ui-sans-serif,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+::selection{background:var(--accent);color:var(--accent-ink)}
+
+/* topbar */
+header{position:sticky;top:0;z-index:20;background:rgba(11,13,16,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px}
+.logo{font-family:var(--mono);font-weight:600;font-size:15px;letter-spacing:-.02em}
+.logo span{color:var(--accent)}
+nav{display:flex;gap:22px;font-size:13.5px;color:var(--muted)}
+nav a{color:var(--muted)}
+nav a:hover{color:var(--accent);text-decoration:none}
+@media(max-width:720px){nav{display:none}}
+
+/* hero */
+.hero{padding:88px 24px 56px;border-bottom:1px solid var(--line)}
+.kicker{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
+h1{font-size:clamp(38px,6vw,64px);font-weight:700;letter-spacing:-.03em;line-height:1.04;max-width:820px}
+h1 em{font-style:normal;color:var(--accent)}
+.lede{margin-top:22px;font-size:18px;color:var(--muted);max-width:640px}
+.statstrip{display:flex;flex-wrap:wrap;gap:0;margin-top:48px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stat{flex:1 1 150px;padding:18px 20px;border-right:1px solid var(--line);background:var(--surface)}
+.stat:last-child{border-right:none}
+.stat b{display:block;font-family:var(--mono);font-size:22px;font-weight:600;letter-spacing:-.02em}
+.stat small{display:block;margin-top:4px;font-size:12px;color:var(--dim);font-family:var(--mono)}
+
+/* sections */
+section{padding:64px 0;border-bottom:1px solid var(--line)}
+.secno{font-family:var(--mono);font-size:12px;color:var(--dim);letter-spacing:.12em}
+h2{font-size:clamp(26px,3.4vw,36px);font-weight:700;letter-spacing:-.02em;margin:10px 0 18px}
+h3{font-size:19px;font-weight:600;margin:34px 0 12px;letter-spacing:-.01em}
+p{color:var(--muted);max-width:760px}
+p+p{margin-top:14px}
+.prose strong{color:var(--ink);font-weight:600}
+
+/* table */
+.tablewrap{overflow-x:auto;margin-top:26px;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:860px;font-size:13.5px}
+th,td{padding:10px 14px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-family:var(--mono);font-size:11.5px;font-weight:500;color:var(--dim);letter-spacing:.04em;background:var(--surface2)}
+td:first-child,th:first-child{text-align:left;font-weight:500;color:var(--ink)}
+tbody tr:last-child td{border-bottom:none}
+td{font-family:var(--mono);color:var(--muted)}
+td.best{color:var(--accent);font-weight:600}
+.col-glm{background:rgba(124,255,178,.05)}
+th.col-glm{color:var(--accent)}
+.src{font-size:12px;color:var(--dim);margin-top:12px;font-family:var(--mono)}
+
+/* callouts */
+.callouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:26px}
+.co{border:1px solid var(--line);border-radius:10px;padding:18px 20px;background:var(--surface)}
+.co b{font-family:var(--mono);font-size:24px;font-weight:600;display:block;letter-spacing:-.02em}
+.co b i{font-style:normal;color:var(--accent)}
+.co span{display:block;margin-top:6px;font-size:13px;color:var(--muted)}
+.co.warn b i{color:var(--warn)}
+
+/* list flow */
+.flow{margin-top:26px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.step{display:flex;gap:18px;padding:18px 22px;border-bottom:1px solid var(--line);background:var(--surface)}
+.step:last-child{border-bottom:none}
+.step .n{font-family:var(--mono);font-size:12px;color:var(--accent);padding-top:3px;min-width:28px}
+.step h4{font-size:15.5px;font-weight:600;margin-bottom:4px}
+.step p{font-size:14px;max-width:640px}
+
+/* code */
+.code{font-family:var(--mono);font-size:13px;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:16px 18px;margin-top:16px;overflow-x:auto;color:var(--muted);white-space:pre}
+.code b{color:var(--accent);font-weight:500}
+.code i{color:var(--dim);font-style:normal}
+
+footer{padding:48px 0 72px;color:var(--dim);font-size:13px}
+footer h4{font-size:14px;color:var(--muted);margin-bottom:14px;font-family:var(--mono);letter-spacing:.08em}
+footer ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.made{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--dim)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <div class="logo">meu<span>codeplan</span></div>
+    <nav>
+      <a href="#modelo">O modelo</a>
+      <a href="#benchmarks">Benchmarks</a>
+      <a href="#agentico">Operação agêntica</a>
+      <a href="#browser">Browser use</a>
+      <a href="#setup">Meu setup</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero wrap">
+  <div class="kicker">GLM Coding Plan · Z.ai · ativo desde 14 nov 2026</div>
+  <h1>GLM-5.3 rodando no Hermes, <em>pela cota do plano</em> — não pela API paga.</h1>
+  <p class="lede">Página de referência do meu setup: o que é o modelo, como ele se compara aos de fronteira, como trabalha de forma agêntica e como usa browser — tudo com fontes verificadas.</p>
+  <div class="statstrip">
+    <div class="stat"><b>1M</b><small>janela de contexto</small></div>
+    <div class="stat"><b>128K</b><small>saída máx. por resposta</small></div>
+    <div class="stat"><b>low·high·max</b><small>níveis de reasoning</small></div>
+    <div class="stat"><b>~753B/40B</b><small>MoE: total / ativo*</small></div>
+    <div class="stat"><b>18/set</b><small>Code Plan a partir de US$18/mês</small></div>
+  </div>
+</div>
+
+<section id="modelo">
+  <div class="wrap">
+    <div class="secno">01</div>
+    <h2>O modelo</h2>
+    <div class="prose">
+      <p><strong>GLM-5.3</strong> é o modelo topo de linha da Z.ai (Zhipu), lançado em 18/08/2026. Ele usa a <strong>mesma arquitetura-base do GLM-5.2</strong> — praticamente todo o ganho vem de pós-treino em escala (RL), não de um modelo novo. É o modelo de <strong>open weights mais capaz para código</strong> segundo a própria Z.ai, com +50% sobre o GLM-5.2 no benchmark interno Z.ai Code Bench.</p>
+      <p>Os pesos são abertos (licença estilo MIT com condição de revisão de segurança para MaaS &gt; US$10B de receita), com checkpoints FP8 e BF16 no Hugging Face — mas o <strong>GLM Coding Plan</strong> é outra coisa: uma assinatura por créditos que dá acesso a GLM-5.3 e GLM-5.3-Flash em endpoints dedicados, sem cobrança por token.</p>
+      <h3>Por que ele importa</h3>
+      <p><strong>Agentic coding de longo alcance.</strong> Os maiores saltos sobre o GLM-5.2 estão exatamente em tarefas longas de agente: SWE-Marathon mais que dobrou (19,4 → 42,5), DeepSWE subiu de 46,2 para 66,9 e Terminal-Bench 3.0 foi de 4,6 para 28,3. Ele mantém um plano através de centenas de passos de terminal sem perder o fio.</p>
+      <p><strong>Capacidade emergente em segurança.</strong> Na CyberGym (descoberta de vulnerabilidades) é o melhor resultado publicado até aqui (84,5), e nos benchmarks de exploração supera o GLM-5.2 por mais de 2×.</p>
+      <p><strong>Economia de tokens.</strong> Nos evals internos, o GLM-5.3 entrega mais acerto com menos saída: no esforço máximo, 34,5% com ~75K tokens de saída por tarefa, contra 23,4% com 96K do GLM-5.2.</p>
+      <p><strong>Raciocínio sempre ligado.</strong> Não existe modo “sem thinking”: os níveis são <span class="code" style="display:inline;padding:2px 8px;white-space:nowrap">low · high · max</span> (padrão: max). Pede-se desabilitar? O request falha — por design.</p>
+    </div>
+    <p class="src">* Total/ativo estimados pela Artificial Analysis; a Z.ai não publica os parâmetros oficiais. Fontes: <a href="https://docs.z.ai/guides/llm/glm-5.3">docs.z.ai</a> · <a href="https://huggingface.co/zai-org/GLM-5.3">model card no Hugging Face</a></p>
+  </div>
+</section>
+
+<section id="benchmarks">
+  <div class="wrap">
+    <div class="secno">02</div>
+    <h2>Benchmarks vs. fronteira</h2>
+    <p>Tabela oficial da Z.ai (model card) comparando GLM-5.3 com os modelos de fronteira de cada laboratório. Em verde, o melhor de cada linha; a coluna do GLM-5.3 destacada.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>Benchmark</th><th class="col-glm">GLM-5.3</th><th>GLM-5.2</th><th>Kimi K3</th><th>DeepSeek-V4 Pro</th><th>Qwen3.8-Max</th><th>Claude Opus 4.8</th><th>Claude Fable 5</th><th>GPT-5.6 Sol</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>Terminal-Bench 2.1</td><td class="col-glm">88.2</td><td>81.0</td><td>88.3</td><td>87.9</td><td>86.6</td><td>85.0</td><td>88.0</td><td class="best">88.8</td></tr>
+          <tr><td>Terminal-Bench 3.0</td><td class="col-glm">28.3</td><td>4.6</td><td>17.4</td><td>–</td><td>–</td><td>21.1</td><td>33.7</td><td class="best">34.6</td></tr>
+          <tr><td>DeepSWE v1.1</td><td class="col-glm">66.9</td><td>46.2</td><td>67.5</td><td>62.7</td><td>56.6</td><td>58.0</td><td>69.7</td><td class="best">72.7</td></tr>
+          <tr><td>SWE-Marathon v1.1</td><td class="col-glm">42.5</td><td>19.4</td><td>48.1</td><td>–</td><td>–</td><td class="best">48.8</td><td>33.1</td><td>42.5</td></tr>
+          <tr><td>FrontierSWE</td><td class="col-glm">78.1</td><td>67.5</td><td>–</td><td>–</td><td>–</td><td>66.5</td><td class="best">88.2</td><td>–</td></tr>
+          <tr><td>NL2Repo</td><td class="col-glm">58.0</td><td>48.9</td><td>58.0</td><td>61.1</td><td>55.9</td><td class="best">69.7</td><td>–</td><td>–</td></tr>
+          <tr><td>ProgramBench (quase resolvido)</td><td class="col-glm">19.0</td><td>9.5</td><td>17.5</td><td>–</td><td>10.5</td><td>15.5</td><td class="best">33.0</td><td>23.0</td></tr>
+          <tr><td>CyberGym</td><td class="col-glm best">84.5</td><td>77.2</td><td>80.0</td><td>83.3</td><td>78.5</td><td>78.1</td><td>83.8</td><td>83.6</td></tr>
+          <tr><td>AutomationBench v1.0.6</td><td class="col-glm best">48.2</td><td>26.2</td><td>46.7</td><td>43.2</td><td>39.8</td><td>41.0</td><td>46.2</td><td>45.8</td></tr>
+          <tr><td>Toolathlon Verified</td><td class="col-glm">73.0</td><td>59.9</td><td class="best">76.5</td><td>74.1</td><td>72.5</td><td>76.2</td><td>74.7</td><td>74.9</td></tr>
+          <tr><td>Agents’ Last Exam (CLI)</td><td class="col-glm">28.5</td><td>23.8</td><td>27.6</td><td>25.7</td><td>27.0</td><td>25.7</td><td>23.8</td><td class="best">28.6</td></tr>
+          <tr><td>HLE com tools</td><td class="col-glm">62.5</td><td>54.7</td><td>59.8</td><td>60.0</td><td>56.2</td><td>57.9</td><td>63.9</td><td class="best">64.5</td></tr>
+          <tr><td>GDPval-AA v2 (Elo)</td><td class="col-glm best">1769</td><td>1508</td><td>1682</td><td>1590</td><td>1739</td><td>1588</td><td>1743</td><td>1730</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="src">Fonte: <a href="https://huggingface.co/zai-org/GLM-5.3">zai-org/GLM-5.3 (Hugging Face)</a> — evals com Claude Code 2.1.207, contexto até 1M, esforço máximo. Benchmarks de laboratório, auto-reportados.</p>
+
+    <h3>Medições independentes</h3>
+    <div class="callouts">
+      <div class="co"><b><i>95,4%</i></b><span>SWE-bench Verified (Vals AI) — 6º geral, à frente de todo modelo open-weight</span></div>
+      <div class="co"><b><i>41,8%</i></b><span>Terminal-Bench 4.0 (tbench.ai, harness Claude Code, 330 trials; pass@5 de 57,6%)</span></div>
+      <div class="co"><b><i>71,8%</i></b><span>Hermes Bench (Nous Research) — a 4,9 pontos do líder Claude Opus 5.5 (76,7)</span></div>
+      <div class="co"><b><i>US$ 4,24</i></b><span>custo médio por tarefa no Coding Agent Index (Artificial Analysis): ~107 passos, 97% de cache-hit</span></div>
+      <div class="co warn"><b><i>Onde perde</i></b><span>SWE-Marathon e NL2Repo para o Opus 4.8; Terminal-Bench 3.0 para GPT-5.6 Sol e Fable 5; FrontierSWE para o Fable 5</span></div>
+    </div>
+    <p class="src">Fontes: <a href="https://ratelimitnow.com/models/glm-5-3/">ratelimitnow.com</a> · <a href="https://benchlm.ai/models/glm-5-3">benchlm.ai</a> · <a href="https://github.com/rajasdevel/outcomebound-research/blob/main/models/zai/glm-5.3.md">outcomebound-research</a></p>
+  </div>
+</section>
+
+<section id="agentico">
+  <div class="wrap">
+    <div class="secno">03</div>
+    <h2>Como ele trabalha de forma agêntica</h2>
+    <p>GLM-5.3 não é um chatbot que responde — é um modelo pós-treinado para <strong>loops longos de ferramenta</strong>: planejar, chamar tool, observar, corrigir, repetir. Os próprios evals da Z.ai rodam com harness de agente real (Claude Code 2.1.207), e é assim que ele opera dentro do Hermes.</p>
+    <div class="flow">
+      <div class="step"><div class="n">01</div><div><h4>Reasoning nativo em três esforços</h4><p>Cadeia de raciocínio sempre ativa, com <span class="code" style="display:inline;padding:1px 6px">reasoning_effort</span> low (leve), high (reforçado) e max (profundo, o padrão). O Hermes traduz a preferência da sessão para esse vocabulário automaticamente. Modo “sem pensar” não existe no 5.3 — quem pede recebe low.</p></div></div>
+      <div class="step"><div class="n">02</div><div><h4>Function calling como cidadão de primeira classe</h4><p>Ferramentas, streaming de chamadas, saída estruturada (JSON) e contexto de 1M tokens. Nos runs independentes do Coding Agent Index, o modelo sustentou ~107 passos por tarefa com 97% de acerto de cache — o caching de contexto é o que torna loops longos economicamente viáveis.</p></div></div>
+      <div class="step"><div class="n">03</div><div><h4>Horizonte longo sem perder o plano</h4><p>Benchmarks como SWE-Marathon e Terminal-Bench 3.0 medem exatamente isso: sessões de horas, até 600 turnos, refatoração de repositórios inteiros. Foi onde o 5.3 mais cresceu sobre o 5.2 (+119% em SWE-Marathon).</p></div></div>
+      <div class="step"><div class="n">04</div><div><h4>Memória em camadas (do lado do agente)</h4><p>O modelo em si não guarda estado entre sessões — quem memora é o harness. A própria Z.ai documenta o padrão: memória de sessão (contexto), de projeto (CLAUDE.md / regras), semântica (RAG), episódica e procedural. No Hermes isso é nativo: skills, memória persistente e arquivos de projeto cumprem exatamente essas camadas.</p></div></div>
+      <div class="step"><div class="n">05</div><div><h4>Roteamento transparente no plano</h4><p>No endpoint do Coding Plan, pedidos por GLM-5.2/5.1 são roteados automaticamente para GLM-5.3, e GLM-4.7 para GLM-5.3-Flash. Verifiquei na prática: pedir glm-4.6 retorna "model": "glm-5.3-flash". O plano só fala esses dois idiomas.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="browser">
+  <div class="wrap">
+    <div class="secno">04</div>
+    <h2>Browser use</h2>
+    <div class="prose">
+      <p><strong>O fato central: GLM-5.3 é texto puro.</strong> Entrada e saída são texto — ele não enxerga screenshots. As features de <em>computer use</em> e <em>browser use</em> da Z.ai rodam no <strong>GLM-5.3-Flash</strong>, o modelo multimodal que acompanha o plano. Na prática, a dupla funciona assim:</p>
+      <p><strong>No Hermes, browser é dirigido por DOM, não por visão.</strong> As ferramentas de browser do Hermes (navegar, clicar, preencher, ler página) trabalham <em>text-first</em>: leem o DOM via JavaScript e devolvem texto estruturado para o modelo decidir o próximo passo. Isso casa perfeitamente com um modelo text-only — o GLM-5.3 navega por estrutura (seletores, accessibility tree, coordenadas calculadas) sem precisar “ver” a tela. Foi assim que ele construiu e publicou esta página.</p>
+      <p><strong>Quando a visão é necessária, o plano inclui.</strong> Todos os planos do Coding Plan têm o <em>Vision MCP Server</em> da Z.ai (npx @z_ai/mcp-server), que roda no GLM-5.3-Flash e dá ferramentas como <span class="code" style="display:inline;padding:1px 6px">ui_to_artifact</span> (screenshot → código), <span class="code" style="display:inline;padding:1px 6px">extract_text_from_screenshot</span> (OCR), <span class="code" style="display:inline;padding:1px 6px">diagnose_error_screenshot</span> e leitura de diagramas e dashboards. O plano também inclui Web Search, Web Reader e Zread MCPs.</p>
+      <p><strong>Division of labor que funciona:</strong> GLM-5.3 decide, planeja e escreve; Flash enxerga quando há pixel envolvido. No meu setup os dois estão a um comando de distância (<span class="code" style="display:inline;padding:1px 6px">/model glm-code</span> ↔ <span class="code" style="display:inline;padding:1px 6px">/model glm-code-flash</span>).</p>
+    </div>
+    <p class="src">Fontes: <a href="https://docs.z.ai/guides/llm/glm-5.3">GLM-5.3 só texto</a> · <a href="https://docs.z.ai/devpack/mcp/vision-mcp-server">Vision MCP Server</a> · <a href="https://docs.z.ai/devpack/overview">Coding Plan: MCPs inclusos</a> · computer/browser use no Flash: outcomebound-research</p>
+  </div>
+</section>
+
+<section id="setup">
+  <div class="wrap">
+    <div class="secno">05</div>
+    <h2>Meu setup no Hermes</h2>
+    <p>Configuração verificada em 14/11/2026 — logs confirmam 100% do tráfego no endpoint do plano.</p>
+    <div class="code">model_aliases:
+  glm-code:        <i># GLM-5.3 — topo de linha, padrão da instância</i>
+    model: glm-5.3
+    provider: zai
+    base_url: <b>https://api.z.ai/api/coding/paas/v4</b>   <i># endpoint DO PLANO</i>
+    key_env: GLM_API_KEY
+  glm-code-flash:  <i># GLM-5.3-Flash — rápido/barato, e multimodal</i>
+    model: glm-5.3-flash
+    provider: zai
+    base_url: <b>https://api.z.ai/api/coding/paas/v4</b>
+    key_env: GLM_API_KEY
+
+model.default: glm-code      <i># usado por novas sessões</i>
+GLM_API_KEY → /opt/data/.env <i># chave fora do config (mascarada aqui)</i></div>
+    <h3>Regras de ouro</h3>
+    <div class="flow">
+      <div class="step"><div class="n">!1</div><div><h4>Nunca o endpoint padrão</h4><p><span class="code" style="display:inline;padding:1px 6px">api.z.ai/api/paas/v4</span> cobra do saldo da conta mesmo com plano ativo. Só o <span class="code" style="display:inline;padding:1px 6px">/api/coding/paas/v4</span> consome cota do plano.</p></div></div>
+      <div class="step"><div class="n">!2</div><div><h4>Só dois modelos</h4><p>O plano cobre GLM-5.3 e GLM-5.3-Flash; qualquer outro pedido é reescrito para um deles.</p></div></div>
+      <div class="step"><div class="n">!3</div><div><h4>Créditos: janela de 5h + semanal</h4><p>Lite 2.000/10.000 · Pro 12.000/60.000 · Max 28.000/140.000 créditos. Fórmula: (in×6,9 + cache×1,7 + out×24)/10.000 para o 5.3; Flash ~3× mais barato. Fora do horário de pico (dia de semana 14h–18h SGT) tudo custa 50% — fim de semana inteiro é meia cota.</p></div></div>
+      <div class="step"><div class="n">!4</div><div><h4>Verificação periódica</h4><p><span class="code" style="display:inline;padding:1px 6px">grep -o "api.z.ai/api/[a-z/]*" agent.log | sort | uniq -c</span> → só deve aparecer coding/paas. E o dashboard da Z.ai mostra cota (não saldo) caindo.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <h4>FONTES</h4>
+    <ul>
+      <li><a href="https://docs.z.ai/guides/llm/glm-5.3">Z.ai — GLM-5.3 Overview (specs, reasoning, endpoints)</a></li>
+      <li><a href="https://huggingface.co/zai-org/GLM-5.3">zai-org/GLM-5.3 — model card com a tabela de benchmarks</a></li>
+      <li><a href="https://docs.z.ai/devpack/overview">GLM Coding Plan — planos, créditos, multiplicadores</a></li>
+      <li><a href="https://docs.z.ai/devpack/notice/api-key-management">Z.ai — API Key Management (endpoint do plano vs. saldo)</a></li>
+      <li><a href="https://docs.z.ai/devpack/mcp/vision-mcp-server">Vision MCP Server (GLM-5.3-Flash)</a> · <a href="https://docs.z.ai/devpack/resources/memory-mechanism">Memory mechanism para coding agents</a></li>
+      <li><a href="https://ratelimitnow.com/models/glm-5-3/">ratelimitnow</a> · <a href="https://benchlm.ai/models/glm-5-3">BenchLM</a> · <a href="https://github.com/rajasdevel/outcomebound-research/blob/main/models/zai/glm-5.3.md">outcomebound-research</a> — medições independentes</li>
+    </ul>
+    <p class="made">meucodeplan · página gerada e publicada pelo Hermes (GLM-5.3, glm-code) em 14/11/2026 · benchmarks de laboratório são auto-reportados pela Z.ai; medições independentes atribuídas às fontes · hospedada no GitHub Pages</p>
+  </div>
+</footer>
+
+</body>
+</html>
